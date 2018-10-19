@@ -82,14 +82,18 @@ function load_pushbutton_Callback(hObject, eventdata, handles)
 
 %path-os betöltés, ha nincs, akkor generálni, log_deblock.mat létrehozása a
 %mappában, üres segments
-%szaggatott vonalak -> kuka
 %helytálló időskála s-ben
 
 [filename, pathname] = uigetfile('*.*','Select file');
 load([pathname filename], 'inspk', 'cluster_class');
 set(handles.data_text,'String',[pathname filename]);
 %én írtam
-load([pathname 'log_deblock.mat'], 'segments');
+if  exist([pathname 'log_deblock.mat'], 'file') == 2
+   % fprintf('itt vagyok %.f\n', exist([pathname 'log_deblock.mat'], 'file'));
+    load([pathname 'log_deblock.mat'], 'segments');
+else
+    segments = zeros(2);
+end
 %eddig
 
 handles.pathname = pathname;
@@ -123,8 +127,12 @@ function coeff_1_decr_pushbutton_Callback(hObject, eventdata, handles)
 str_coeff_1 = get(handles.coeff_1_edit, 'String');
 dim_coeff_1 = str2double(str_coeff_1);
 
-if dim_coeff_1 > 1
-    dim_coeff_1_updated = dim_coeff_1 - 1;
+if dim_coeff_1 > 1 || str_coeff_1 == 't'
+    if str_coeff_1 == 't'
+        dim_coeff_1_updated = handles.no_coeff;
+    else
+        dim_coeff_1_updated = dim_coeff_1 - 1;
+    end
     str_coeff_1_updated = num2str(dim_coeff_1_updated);
     set(handles.coeff_1_edit, 'String', str_coeff_1_updated);
 
@@ -165,6 +173,7 @@ if dim_coeff_1 <= handles.no_coeff
     
     %én írtam
     if dim_coeff_1 == handles.no_coeff + 1 
+        set(handles.coeff_1_edit, 'String', 't');
         cla
         plot_raster_wavelet_coeff(inspk, cluster_class, dim_coeff_2, handles.segments, handles.color)
     %ezt az else-t is én írtam
@@ -197,7 +206,7 @@ if dim_coeff_2 > 1
     dim_coeff_1 = str2double(str_coeff_1);
     dim_coeff_2 = str2double(str_coeff_2);
     
-    if dim_coeff_1 == handles.no_coeff + 1
+    if dim_coeff_1 == handles.no_coeff + 1 || str_coeff_1 == 't'
         cla
         plot_raster_wavelet_coeff(inspk, cluster_class, dim_coeff_2, handles.segments, handles.color)
     else
@@ -230,7 +239,7 @@ if dim_coeff_2 < handles.no_coeff
     dim_coeff_1 = str2double(str_coeff_1);
     dim_coeff_2 = str2double(str_coeff_2);
     
-    if dim_coeff_1 == handles.no_coeff + 1 
+    if dim_coeff_1 == handles.no_coeff + 1 || str_coeff_1 == 't'
         cla
         plot_raster_wavelet_coeff(inspk, cluster_class, dim_coeff_2, handles.segments, handles.color)
     else       
@@ -257,10 +266,19 @@ if dim_coeff_2 >= 1 && dim_coeff_2 <= handles.no_coeff
     inspk = handles.inspk;
     cluster_class = handles.cluster_class;
     str_coeff_1 = get(handles.coeff_1_edit, 'String');
-    dim_coeff_1 = str2double(str_coeff_1);
+    if str_coeff_1 == 't'
+        dim_coeff_1 = handles.no_coeff + 1;
+    else
+        dim_coeff_1 = str2double(str_coeff_1);
+    end
     
-    cla
-    plot_coeff_vs_coeff(inspk, cluster_class, dim_coeff_1, dim_coeff_2, handles.color, handles.markersize)
+    if (dim_coeff_1 == handles.no_coeff + 1)
+        cla
+        plot_raster_wavelet_coeff(inspk, cluster_class, dim_coeff_2, handles.segments, handles.color)
+    else
+        cla
+        plot_coeff_vs_coeff(inspk, cluster_class, dim_coeff_1, dim_coeff_2, handles.color, handles.markersize)
+    end
 end
 
 guidata(hObject, handles);
@@ -287,18 +305,24 @@ function coeff_1_edit_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of coeff_1_edit as text
 %        str2double(get(hObject,'String')) returns contents of coeff_1_edit as a double
 str_coeff_1 = get(hObject, 'String');
-dim_coeff_1 = str2double(str_coeff_1);
+if str_coeff_1 == 't'
+    dim_coeff_1 = handles.no_coeff + 1;
+else
+    dim_coeff_1 = str2double(str_coeff_1);
+end
 
-if dim_coeff_1 >= 1 && dim_coeff_1 <= handles.no_coeff  
+if (dim_coeff_1 >= 1 && dim_coeff_1 <= handles.no_coeff + 1)
     inspk = handles.inspk;
     cluster_class = handles.cluster_class;
     str_coeff_2 = get(handles.coeff_2_edit, 'String');
     dim_coeff_2 = str2double(str_coeff_2);
     
-     if dim_coeff_1 == handles.no_coeff + 1
+     if (dim_coeff_1 == handles.no_coeff + 1)
+        set(handles.coeff_1_edit, 'String', 't');
         cla
         plot_raster_wavelet_coeff(inspk, cluster_class, dim_coeff_2, handles.segments, handles.color)
-     else       
+     else
+        %set(handles.coeff_1_edit, 'String', str_coeff_1);
         cla
         plot_coeff_vs_coeff(inspk, cluster_class, dim_coeff_1, dim_coeff_2, handles.color, handles.markersize)
      end
@@ -330,6 +354,7 @@ no_cluster = cluster_class(:,1); % # of cluster
 %                                 'units','normalized','outerposition',[0 0 1 1]);
 hold on 
 % plot the rejected spikes with black:
+title(['coeff #' num2str(dim_coeff_1) ' vs ' 'coeff #' num2str(dim_coeff_2)], 'FontSize', 10, 'FontWeight', 'bold'); 
 scatter(c_wavelet_1(no_cluster == 0),c_wavelet_2(no_cluster == 0),markersize,[0 0 0],'filled');
 switch coloring
     % plot the clustered spikes with the same color used in the wave_clus:
@@ -374,17 +399,22 @@ contents = cellstr(get(hObject,'String'));
 handles.color = contents{get(hObject,'Value')};
     inspk = handles.inspk;
     cluster_class = handles.cluster_class;
+    
     str_coeff_1 = get(handles.coeff_1_edit, 'String');
+    if str_coeff_1 == 't'
+        dim_coeff_1 = handles.no_coeff + 1;
+    else
+        dim_coeff_1 = str2double(str_coeff_1);
+    end
     str_coeff_2 = get(handles.coeff_2_edit, 'String');
-    dim_coeff_1 = str2double(str_coeff_1);
     dim_coeff_2 = str2double(str_coeff_2);
     
-    if dim_coeff_1 == handles.no_coeff + 1
+    if dim_coeff_1 == (handles.no_coeff + 1) 
         cla
-   plot_raster_wavelet_coeff(inspk, cluster_class, dim_coeff_2, handles.segments, handles.color)
+        plot_raster_wavelet_coeff(inspk, cluster_class, dim_coeff_2, handles.segments, handles.color)
     else
         cla
-    plot_coeff_vs_coeff(inspk, cluster_class, dim_coeff_1, dim_coeff_2, handles.color, handles.markersize)
+        plot_coeff_vs_coeff(inspk, cluster_class, dim_coeff_1, dim_coeff_2, handles.color, handles.markersize)
     end
     
 guidata(hObject, handles);
@@ -416,13 +446,23 @@ handles.markersize = str2double(contents{get(hObject,'Value')});
 
     inspk = handles.inspk;
     cluster_class = handles.cluster_class;
+    
     str_coeff_1 = get(handles.coeff_1_edit, 'String');
+    if str_coeff_1 == 't'
+        dim_coeff_1 = handles.no_coeff + 1;
+    else
+        dim_coeff_1 = str2double(str_coeff_1);
+    end
     str_coeff_2 = get(handles.coeff_2_edit, 'String');
-    dim_coeff_1 = str2double(str_coeff_1);
     dim_coeff_2 = str2double(str_coeff_2);
     
-    cla
-    plot_coeff_vs_coeff(inspk, cluster_class, dim_coeff_1, dim_coeff_2, handles.color, handles.markersize)
+    if dim_coeff_1 == (handles.no_coeff + 1) 
+        cla
+        plot_raster_wavelet_coeff(inspk, cluster_class, dim_coeff_2, handles.segments, handles.color)
+    else
+        cla
+        plot_coeff_vs_coeff(inspk, cluster_class, dim_coeff_1, dim_coeff_2, handles.color, handles.markersize)
+    end
     
 guidata(hObject, handles);
 
@@ -476,9 +516,8 @@ times_100_sec = times/time_scale;
 hold on 
 % plot the rejected spikes with black:
 scatter(times_100_sec(no_cluster == 0),c_wavelet(no_cluster == 0),10,[0 0 0],'filled');
-%majd rakd vissza, ha minden okés
-%xlabel('t', 'FontSize',12,'FontWeight','bold');
-%ylabel(['coeff #' num2str(dim_coeff)], 'FontSize',12,'FontWeight','bold'); 
+
+title(['coeff #' num2str(dim_coeff) ' vs t'], 'FontSize', 10, 'FontWeight', 'bold'); 
 %scatter(min(times(no_cluster == 0)),min(c_wavelet(no_cluster == 0)),10,[0 0 0],'filled');
 %scatter(max(times(no_cluster == 0)),max(c_wavelet(no_cluster == 0)),10,[0 0 0],'filled');
 
@@ -531,9 +570,10 @@ end
 
 % plot vertical lines between each epoch
 yl = ylim;
-for i = 1:15
-    plot([i,i], yl,'--', 'Color', [0.4 0.4 0.4]);
-end
+% szürke függőleges vonalak
+%for i = 1:15
+%    plot([i,i], yl,'--', 'Color', [0.4 0.4 0.4]);
+%end
 
 % plot areas of segments to indicate where spike sorting hasn't been performed 
 for i = 1:size(log_deblock_ms,1)
@@ -543,4 +583,3 @@ for i = 1:size(log_deblock_ms,1)
     rectangle('Position',[block_start,yl(1),length_block,(yl(2)-yl(1))],...
         'FaceColor',[0.8 0.8 0.8],'EdgeColor',[0.8 0.8 0.8]);
 end
-
