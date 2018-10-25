@@ -16,3 +16,5 @@ MÉG EGY SOR TŐLEM PGY
 ÍROK MÉG EGY PLUS SORT
 >>>>>>> 53838c7e6f473be724a874d8312bf55af9bd9181
 >>>>>>> abdcc413a29acfc1c62989fba24290b23ef56be3
+
+valami szöveg
