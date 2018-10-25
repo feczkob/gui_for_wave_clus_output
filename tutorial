@@ -3,3 +3,4 @@ git add . => mappában lévő fileok hozzáadása a lokális repoba
 git commit -m "MESSAGE" => commit hozzáadása a legfrissebb változtatásokhoz
 git push origin master => lokális verzió feltöltése a felhőbe (Enélkül nem lehet új commitot csinálni)
 git clone REPO_URL => felhőből helyi repo létrehozása (REPO_URL = https://user_name@bitbucket.org/user_name/repo_name.git)
+branch tutorial -->  https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging
